@@ -14,15 +14,13 @@ using namespace std;
 class Provider{
     string name;
     vector<Service> service_list;
-    vector<Customer> customers;
     int id;
 
 public:
-    Provider(string, int, vector<Service>, vector<Customer>);
+    Provider(string, int, vector<Service>);
 
     string getProviderName() const;
     vector<Service> getServices() const;
-    vector<Customer> getCustomers() const;
     int getRevenue() const;
 };
 

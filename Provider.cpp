@@ -1,10 +1,9 @@
 #include "Provider.h"
 
-Provider::Provider(string name, int id, vector<Service> services, vector<Customer> customers){
+Provider::Provider(string name, int id, vector<Service> services){
     this->name = name;
     this->id = id;
-    this->service_list = services;
-    this->customers = customers;
+    this->service_list = std::move(services);
 }
 
 string Provider::getProviderName()const{
@@ -15,10 +14,11 @@ vector<Service> Provider::getServices()const{
   return service_list;
 }
 
-vector<Customer> Provider::getCustomers()const{
-  return customers;
-}
 
 int Provider::getRevenue()const{
-  return 1;
+  int total_revenue=0;
+  for(Service i:service_list){
+    total_revenue += i.getRevenue();
+  }
+  return total_revenue;
 }

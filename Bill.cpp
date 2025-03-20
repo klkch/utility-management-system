@@ -3,15 +3,16 @@
 //
 
 #include "Bill.h"
-Bill::Bill(int provider_id,int cost){
+Bill::Bill(int provider_id,int cost,int c_id){
   this->provider_id = provider_id;
+  this->customer_id = c_id;
   this->cost = cost;
   this->due = cost;
 }
 
 void Bill::payCost(int amount){
   int value = this->due-amount;
-  if (value < 0{
+  if (value < 0){
     value=0;
   }
   this->due = value;

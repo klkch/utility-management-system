@@ -13,14 +13,12 @@ using namespace std;
 
 class Customer {
     string name;
-    int id;
-    vector<Service> subscriptions;
+    int customer_id;
 
   public:
-    Customer(string, int,map<Service,int>);
+    Customer(string,int);
     string getName()const;
-    vector<Service> getSubscriptions()const;
-
+    int getId()const;
 };
 
 

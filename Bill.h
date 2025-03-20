@@ -9,9 +9,10 @@ class Bill {
     int cost;
     int due;
     int provider_id;
+    int customer_id;
 
     public:
-    Bill(int, int);
+    Bill(int, int, int);
     void payCost(int);
 };
 
