@@ -17,3 +17,15 @@ string Customer::getName()const{
 int Customer::getId()const{
   return this->customer_id;
 }
+
+void Customer::addBill(Bill bill){
+  this->bills.push_back(bill);
+}
+
+int Customer::balanceDue()const{
+  int total = 0;
+  for(const Bill i:bills){
+	total += i.getDue();
+  }
+	return total;
+}

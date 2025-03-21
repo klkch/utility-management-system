@@ -14,10 +14,9 @@ using namespace std;
 class Provider{
     string name;
     vector<Service> service_list;
-    int id;
 
 public:
-    Provider(string, int, vector<Service>);
+    Provider(string, vector<Service>);
 
     string getProviderName() const;
     vector<Service> getServices() const;

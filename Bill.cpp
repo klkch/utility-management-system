@@ -3,8 +3,7 @@
 //
 
 #include "Bill.h"
-Bill::Bill(int provider_id,int cost,int c_id){
-  this->provider_id = provider_id;
+Bill::Bill(int cost,int c_id){
   this->customer_id = c_id;
   this->cost = cost;
   this->due = cost;
@@ -16,4 +15,8 @@ void Bill::payCost(int amount){
     value=0;
   }
   this->due = value;
+}
+
+int Bill::getDue()const{
+	return due;
 }

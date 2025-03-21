@@ -4,11 +4,12 @@
 
 #include "Service.h"
 
-Service::Service(string name, int cost){
+
+Service::Service(string name, int cost,vector<Customer> customers){
   this->name = name;
   this->bill_cost = cost;
 
-  this->customers = customers;
+  this->customers=customers;
 }
 
 vector<Customer> Service::getCustomers()const{
@@ -24,7 +25,15 @@ int Service::getCost()const{
 
 void Service::billCustomers(){
     for(Customer i:customers){
-
+		Bill newbill(getCost(),i.getId());
+		i.addBill(newbill);
     }
+}
 
+int Service::getRevenue()const{
+  int revenue=0;
+  for(Customer i:customers){
+		revenue += i.balanceDue();
+    }
+  return revenue;
 }

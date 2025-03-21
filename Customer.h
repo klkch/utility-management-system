@@ -6,19 +6,24 @@
 #define CUSTOMER_H
 
 #include <string>
-#include <map>
-#include "Service.h"
+#include "Bill.h"
+#include <vector>
 
 using namespace std;
 
 class Customer {
     string name;
     int customer_id;
+    vector<Bill> bills;
 
   public:
     Customer(string,int);
     string getName()const;
     int getId()const;
+    void addBill(Bill);
+	int balanceDue()const;
+
+	Customer& operator=(const Customer&) = default;
 };
 
 

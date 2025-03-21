@@ -8,12 +8,12 @@
 class Bill {
     int cost;
     int due;
-    int provider_id;
     int customer_id;
 
     public:
-    Bill(int, int, int);
+    Bill(int, int);
     void payCost(int);
+    int getDue()const;
 };
 
 

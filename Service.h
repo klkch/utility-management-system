@@ -6,9 +6,9 @@
 #define SERVICE_H
 
 #include <string>
-#include "Customer.h"
-#include "Bill.h"
 #include <vector>
+#include "Bill.h"
+#include "Customer.h"
 
 using namespace std;
 class Service {
@@ -16,16 +16,16 @@ class Service {
     int bill_cost;
 
     vector<Customer> customers;
-    vector<Bill> bills;
 
 public:
-    Service(string, int);
+    Service(string, int,vector<Customer>);
 
     string getName() const;
     int getCost() const;
 	int getRevenue() const;
     vector<Customer> getCustomers() const;
     void billCustomers();
+
 };
 
 

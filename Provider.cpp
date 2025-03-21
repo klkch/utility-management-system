@@ -1,8 +1,7 @@
 #include "Provider.h"
 
-Provider::Provider(string name, int id, vector<Service> services){
+Provider::Provider(string name, vector<Service> services){
     this->name = name;
-    this->id = id;
     this->service_list = std::move(services);
 }
 
