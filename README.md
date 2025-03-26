@@ -38,7 +38,7 @@ vcpkg install libpqxx
 
 ---
 
-## ⚙Compiling
+## Compiling
 
 ### macOS
 
