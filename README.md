@@ -77,5 +77,5 @@ Run the program:
 ./utility.exe
 ```
 
-> 📌 Replace `[path_to_vcpkg]` with your actual vcpkg path (e.g., `C:/dev/vcpkg`).
+> Replace `[path_to_vcpkg]` with your actual vcpkg path (e.g., `C:/dev/vcpkg`).
 
