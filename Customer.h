@@ -6,8 +6,9 @@
 #define CUSTOMER_H
 
 #include <string>
-#include "Bill.h"
 #include <vector>
+#include <pqxx/pqxx>
+#include "Bill.h"
 
 using namespace std;
 
@@ -16,16 +17,19 @@ class Customer {
     int customer_id;
     vector<Bill> bills;
 
-  public:
-    Customer(string,int);
-    string getName()const;
-    int getId()const;
+public:
+    Customer(string, int);
+    string getName() const;
+    int getId() const;
     void addBill(Bill);
-	int balanceDue()const;
+    int balanceDue() const;
 
-	Customer& operator=(const Customer&) = default;
+    // ✅ Database functions
+    static void addCustomerToDB(pqxx::connection& c, const string& name, const string& address, const string& phone, const string& email);
+    static void viewAllCustomers(pqxx::connection& c);
+    static void removeCustomerById(pqxx::connection& c, int customerId);
+
+    Customer& operator=(const Customer&) = default;
 };
 
-
-
-#endif //CUSTOMER_H
+#endif // CUSTOMER_H
