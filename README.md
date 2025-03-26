@@ -4,7 +4,7 @@
 
 ## Requirements
 
-### macOS (Apple Silicon)
+### macOS 
 
 - macOS 11+ (Apple Silicon)
 - [Homebrew](https://brew.sh/)
