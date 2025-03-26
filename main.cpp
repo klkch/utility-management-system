@@ -1,25 +1,27 @@
 #include <iostream>
-
-
-#include "Service.h"
-#include "Bill.h"
-#include "Customer.h"
-#include "Provider.h"
-#include <string>
+#include <pqxx/pqxx>
 
 int main() {
-    Customer customer1("Steve",12345);
-    Customer customer2("Amy",63453);
+    try {
+        pqxx::connection c(
+            "host=aws-0-ca-central-1.pooler.supabase.com "
+            "port=5432 "
+            "dbname=postgres "
+            "user=postgres.nbjzlzreuwryagkoqvgi "
+            "password=COMP3400Project "
+            "sslmode=require"
+        );
 
-    vector<Customer> customerlist;
-    customerlist.emplace_back(customer1);
-    customerlist.emplace_back(customer2);
+        if (c.is_open()) {
+            std::cout << "Connected to database successfully: " << c.dbname() << std::endl;
+        } else {
+            std::cerr << "Unable to open database" << std::endl;
+            return 1;
+        }
+    } catch (const std::exception &e) {
+        std::cerr << "Connection failed: " << e.what() << std::endl;
+        return 1;
+    }
 
-    Service service1("Natural Gas",25,customerlist);
-    vector<Service> servicelist;
-    servicelist.emplace_back(service1);
-
-    Provider provider1("Bayside's Power",servicelist);
-
-    std::cout<<"asdadasd"+std::to_string(provider1.getRevenue());
+    return 0;
 }
