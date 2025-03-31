@@ -36,15 +36,21 @@ void Customer::addCustomerToDB(pqxx::connection& c, const std::string& name, con
     try {
         pqxx::work txn(c);
         txn.exec_params(
-            "INSERT INTO public.customers (customer_name, customer_address, phone_number, customer_email, total_due) VALUES ($1, $2, $3, $4, 0.00)",
+            pqxx::zview{
+                "INSERT INTO public.customers (customer_name, customer_address, phone_number, customer_email, total_due) VALUES ($1, $2, $3, $4, 0.00)"
+            },
             name, address, phone, email
         );
+        
+        
         txn.commit();
         std::cout << "Customer added successfully.\n";
     } catch (const std::exception& e) {
         std::cerr << "Error adding customer: " << e.what() << "\n";
     }
 }
+
+
 
 // View all customers 
 void Customer::viewAllCustomers(pqxx::connection& c) {
@@ -70,13 +76,11 @@ void Customer::viewAllCustomers(pqxx::connection& c) {
 void Customer::removeCustomerById(pqxx::connection& c, int customerId) {
     try {
         pqxx::work txn(c);
-        txn.exec_params(
-            "DELETE FROM public.customers WHERE customer_id = $1",
-            customerId
-        );
+        txn.exec(pqxx::zview{"DELETE FROM public.customers WHERE customer_id = $1"}, customerId);
         txn.commit();
         std::cout << "Customer with ID " << customerId << " removed successfully.\n";
     } catch (const std::exception& e) {
         std::cerr << "Error removing customer: " << e.what() << "\n";
     }
 }
+

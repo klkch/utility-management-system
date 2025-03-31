@@ -6,18 +6,14 @@
 void Invoice::addInvoice(pqxx::connection& c, int customerId, int providerId, const std::string& dueDate, double amountDue) {
     try {
         pqxx::work txn(c);
-        
-    
-        txn.exec_params(
-            "INSERT INTO invoices (customer_id, provider_id, due_date, amount_due) VALUES ($1, $2, $3, $4)",
-            customerId, providerId, dueDate, amountDue
-        );
 
-        // Update customer's total_due
-        txn.exec_params(
-            "UPDATE customers SET total_due = total_due + $1 WHERE customer_id = $2",
-            amountDue, customerId
-        );
+        txn.exec(pqxx::zview{
+            "INSERT INTO invoices (customer_id, provider_id, due_date, amount_due) VALUES ($1, $2, $3, $4)"
+        }, pqxx::params{customerId, providerId, dueDate, amountDue});
+        
+
+        txn.exec(pqxx::zview{"UPDATE customers SET total_due = total_due + $1 WHERE customer_id = $2"}, pqxx::params{amountDue, customerId});
+
 
         txn.commit();
         std::cout << "Invoice added successfully.\n";
@@ -26,8 +22,7 @@ void Invoice::addInvoice(pqxx::connection& c, int customerId, int providerId, co
     }
 }
 
-
-//view all invoices
+// view all invoices
 void Invoice::viewAllInvoices(pqxx::connection& c) {
     try {
         pqxx::nontransaction txn(c);
@@ -52,8 +47,8 @@ void Invoice::markInvoiceAsPaid(pqxx::connection& c, int invoiceId) {
     try {
         pqxx::work txn(c);
 
-        pqxx::result res = txn.exec_params(
-            "SELECT customer_id, amount_due FROM invoices WHERE invoice_id = $1 AND status != 'PAID'",
+        pqxx::result res = txn.exec(
+            pqxx::zview{"SELECT customer_id, amount_due FROM invoices WHERE invoice_id = $1 AND status != 'PAID'"},
             invoiceId
         );
 
@@ -65,17 +60,15 @@ void Invoice::markInvoiceAsPaid(pqxx::connection& c, int invoiceId) {
         int customerId = res[0]["customer_id"].as<int>();
         double amountDue = res[0]["amount_due"].as<double>();
 
-        // Update to PAID
-        txn.exec_params(
-            "UPDATE invoices SET status = 'PAID' WHERE invoice_id = $1",
+        txn.exec(
+            pqxx::zview{"UPDATE invoices SET status = 'PAID' WHERE invoice_id = $1"},
             invoiceId
         );
 
-        // Subtract paid amt from the customer's total_due
-        txn.exec_params(
-            "UPDATE customers SET total_due = total_due - $1 WHERE customer_id = $2",
-            amountDue, customerId
-        );
+        txn.exec(pqxx::zview{
+            "UPDATE customers SET total_due = total_due + $1 WHERE customer_id = $2"
+        }, pqxx::params{amountDue, customerId});
+        
 
         txn.commit();
         std::cout << "Invoice marked as paid and customer's total due updated.\n";
@@ -84,12 +77,14 @@ void Invoice::markInvoiceAsPaid(pqxx::connection& c, int invoiceId) {
     }
 }
 
-
 // delete invoice
 void Invoice::deleteInvoice(pqxx::connection& c, int invoiceId) {
     try {
         pqxx::work txn(c);
-        txn.exec_params("DELETE FROM invoices WHERE invoice_id = $1", invoiceId);
+        txn.exec(
+            pqxx::zview{"DELETE FROM invoices WHERE invoice_id = $1"},
+            invoiceId
+        );
         txn.commit();
         std::cout << "Invoice deleted successfully.\n";
     } catch (const std::exception& e) {

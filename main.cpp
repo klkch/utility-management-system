@@ -3,6 +3,8 @@
 #include "Customer.h"
 #include "Provider.h"
 #include "Invoice.h"
+#include <QApplication>
+#include "MainWindow.h"
 
 
 using namespace std;
@@ -159,7 +161,8 @@ void manageProviders(pqxx::connection& c) {
 
             // Check if provider exists before removing
             pqxx::nontransaction txn(c);
-            pqxx::result res = txn.exec_params("SELECT provider_id FROM providers WHERE provider_id = $1", id);
+            pqxx::result res = txn.exec(pqxx::zview{"SELECT * FROM providers WHERE provider_id = $1"}, id);
+;
             if (res.empty()) {
                 cout << "Error: Provider with ID " << id << " does not exist.\n";
                 continue;
@@ -175,7 +178,8 @@ void manageProviders(pqxx::connection& c) {
 
             // Check if provider exists before continuing
             pqxx::nontransaction txn(c);
-            pqxx::result res = txn.exec_params("SELECT provider_id FROM providers WHERE provider_id = $1", id);
+            pqxx::result res = txn.exec(pqxx::zview{"SELECT * FROM providers WHERE provider_id = $1"}, id);
+;
             if (res.empty()) {
                 cout << "Error: Provider with ID " << id << " does not exist.\n";
                 continue;
@@ -255,54 +259,11 @@ void manageInvoices(pqxx::connection& c) {
     }
 }
 
-int main() {
-    try {
-        pqxx::connection c(
-            "host=aws-0-ca-central-1.pooler.supabase.com "
-            "port=5432 "
-            "dbname=postgres "
-            "user=postgres.nbjzlzreuwryagkoqvgi "
-            "password=COMP3400Project "
-            "sslmode=require"
-        );
+int main(int argc, char *argv[]) {
+    QApplication app(argc, argv);
 
-        if (!c.is_open()) {
-            cerr << "Unable to open database." << endl;
-            return 1;
-        }
+    MainWindow window;
+    window.show();
 
-        int mainChoice;
-        while (true) {
-            showMainMenu();
-            cin >> mainChoice;
-
-            if (cin.fail()) {
-                cin.clear();
-                cin.ignore(10000, '\n');
-                cout << "Invalid input. Try again.\n";
-                continue;
-            }
-
-            cin.ignore(10000, '\n');
-
-            if (mainChoice == 1) {
-                manageCustomers(c);
-            } else if (mainChoice == 2) {
-                manageProviders(c);
-            }  else if (mainChoice == 3) {
-                manageInvoices(c);
-            } else if (mainChoice == 4) {
-                cout << "Goodbye!\n";
-                break;
-            } else {
-                cout << "Invalid choice. Please select 1-4.\n";
-            }
-        }
-
-    } catch (const exception& e) {
-        cerr << "Connection failed: " << e.what() << endl;
-        return 1;
-    }
-
-    return 0;
+    return app.exec();
 }
