@@ -21,6 +21,11 @@ public:
     string getProviderName() const;
     vector<Service> getServices() const;
     int getRevenue() const;
+
+    static void addProviderToDB(pqxx::connection& c, const string& name, const string& phone, const string& email, const string& serviceType);
+    static void viewAllProviders(pqxx::connection& c);
+    static void removeProviderById(pqxx::connection& c, int providerId);
+    static void editProviderById(pqxx::connection& c, int providerId, const string& newName, const string& newPhone, const string& newEmail, const string& newServiceType);
 };
 
 
