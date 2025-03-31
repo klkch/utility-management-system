@@ -2,6 +2,8 @@
 #include <pqxx/pqxx>
 #include "Customer.h"
 #include "Provider.h"
+#include "Invoice.h"
+
 
 using namespace std;
 
@@ -35,7 +37,12 @@ void showProviderMenu() {
 
 void showInvoiceMenu() {
     cout << "\n-- Invoice Management --\n";
-    cout << "TBD\n";
+    cout << "1. Add Invoice\n";
+    cout << "2. View All Invoices\n";
+    cout << "3. Mark Invoice as Paid\n";
+    cout << "4. Delete Invoice\n";
+    cout << "5. Back to Main Menu\n";
+    cout << "Select an option: ";
 }
 
 string selectServiceType() {
@@ -194,6 +201,60 @@ void manageProviders(pqxx::connection& c) {
     }
 }
 
+void manageInvoices(pqxx::connection& c) {
+    int choice;
+    while (true) {
+        showInvoiceMenu();
+        cin >> choice;
+
+        if (cin.fail()) {
+            cin.clear();
+            cin.ignore(10000, '\n');
+            cout << "Invalid input. Try again.\n";
+            continue;
+        }
+
+        if (choice == 1) {
+            int customerId, providerId;
+            string dueDate;
+            double amountDue;
+            cin.ignore();
+            cout << "Enter Customer ID: ";
+            cin >> customerId;
+            cout << "Enter Provider ID: ";
+            cin >> providerId;
+            cin.ignore();
+            cout << "Enter Due Date (YYYY-MM-DD): ";
+            getline(cin, dueDate);
+            cout << "Enter Amount Due: ";
+            cin >> amountDue;
+
+            Invoice::addInvoice(c, customerId, providerId, dueDate, amountDue);
+
+        } else if (choice == 2) {
+            Invoice::viewAllInvoices(c);
+
+        } else if (choice == 3) {
+            int id;
+            cout << "Enter Invoice ID to mark as paid: ";
+            cin >> id;
+            Invoice::markInvoiceAsPaid(c, id);
+
+        } else if (choice == 4) {
+            int id;
+            cout << "Enter Invoice ID to delete: ";
+            cin >> id;
+            Invoice::deleteInvoice(c, id);
+
+        } else if (choice == 5) {
+            break;
+
+        } else {
+            cout << "Invalid choice. Please select 1-5.\n";
+        }
+    }
+}
+
 int main() {
     try {
         pqxx::connection c(
@@ -228,8 +289,8 @@ int main() {
                 manageCustomers(c);
             } else if (mainChoice == 2) {
                 manageProviders(c);
-            } else if (mainChoice == 3) {
-                showInvoiceMenu();
+            }  else if (mainChoice == 3) {
+                manageInvoices(c);
             } else if (mainChoice == 4) {
                 cout << "Goodbye!\n";
                 break;
