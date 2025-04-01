@@ -46,7 +46,8 @@ vcpkg install libpqxx
 
 ```bash
 g++ -std=c++17 -fPIC -Wno-unknown-attributes -Wno-deprecated-declarations \
-    main.cpp MainWindow.cpp moc_MainWindow.cpp \
+    main.cpp MainWindow.cpp CustomerDialog.cpp ProviderDialog.cpp InvoiceDialog.cpp \
+    moc_MainWindow.cpp moc_CustomerDialog.cpp moc_ProviderDialog.cpp moc_InvoiceDialog.cpp \
     Customer.cpp Provider.cpp Service.cpp Invoice.cpp Bill.cpp \
     -I/opt/homebrew/include \
     -I/opt/homebrew/opt/libpqxx/include \
@@ -57,6 +58,7 @@ g++ -std=c++17 -fPIC -Wno-unknown-attributes -Wno-deprecated-declarations \
     $(pkg-config --cflags --libs Qt6Widgets) \
     -lpqxx -lpq \
     -o utility_gui
+
 
 ```
 
