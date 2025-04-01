@@ -11,6 +11,8 @@
 #include <QLabel>
 #include <QSpacerItem>
 #include <QPushButton>
+#include <QPixmap>
+#include <QFile>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), dbConnection(nullptr)
@@ -29,9 +31,9 @@ MainWindow::MainWindow(QWidget *parent)
     // Create central widget and main layout
     QWidget *centralWidget = new QWidget(this);
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
-    
+
     // Welcome label
-    QLabel *welcomeLabel = new QLabel("Welcome to Utility Management System");
+    QLabel *welcomeLabel = new QLabel("Utility Management System");
     welcomeLabel->setStyleSheet("font-size: 32px; font-weight: bold; color: white; padding: 20px;");
     welcomeLabel->setAlignment(Qt::AlignCenter);
     mainLayout->addWidget(welcomeLabel);
@@ -39,7 +41,7 @@ MainWindow::MainWindow(QWidget *parent)
     // Create buttons container
     QWidget *buttonContainer = new QWidget;
     QHBoxLayout *buttonLayout = new QHBoxLayout(buttonContainer);
-    
+
     // Create and style buttons
     customerButton = new QPushButton("Manage Customers", this);
     providerButton = new QPushButton("Manage Providers", this);
@@ -65,16 +67,36 @@ MainWindow::MainWindow(QWidget *parent)
     providerButton->setStyleSheet(buttonStyle);
     invoiceButton->setStyleSheet(buttonStyle);
 
-    // Add buttons to layout with spacing
+    // Icon and button layout setup
+    auto makeIconButtonGroup = [](const QString &iconPath, QPushButton *button) -> QWidget* {
+        QLabel *iconLabel = new QLabel;
+        iconLabel->setPixmap(QPixmap(iconPath).scaled(128, 128, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        iconLabel->setAlignment(Qt::AlignCenter);
+
+        QVBoxLayout *vLayout = new QVBoxLayout;
+        vLayout->addWidget(iconLabel);
+        vLayout->addWidget(button);
+        vLayout->setAlignment(Qt::AlignHCenter);
+
+        QWidget *group = new QWidget;
+        group->setLayout(vLayout);
+        return group;
+    };
+
+    QWidget *customerWidget = makeIconButtonGroup("icons/customer.png", customerButton);
+    QWidget *providerWidget = makeIconButtonGroup("icons/provider.png", providerButton);
+    QWidget *invoiceWidget = makeIconButtonGroup("icons/invoice.png", invoiceButton);
+
+    // Add widgets to layout
     buttonLayout->addStretch();
-    buttonLayout->addWidget(customerButton);
+    buttonLayout->addWidget(customerWidget);
     buttonLayout->addSpacing(20);
-    buttonLayout->addWidget(providerButton);
+    buttonLayout->addWidget(providerWidget);
     buttonLayout->addSpacing(20);
-    buttonLayout->addWidget(invoiceButton);
+    buttonLayout->addWidget(invoiceWidget);
     buttonLayout->addStretch();
 
-    // Add button container to main layout with some vertical spacing
+    // Add button container to main layout
     mainLayout->addSpacing(50);
     mainLayout->addWidget(buttonContainer);
     mainLayout->addStretch();
