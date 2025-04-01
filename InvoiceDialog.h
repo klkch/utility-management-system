@@ -32,7 +32,9 @@ private:
     void refreshTable();
     void loadCustomers();
     void loadProviders();
+    void handleViewOverdueInvoices();
 
+    QPushButton *overdueButton;  
     QComboBox *customerCombo;
     QComboBox *providerCombo;
     QDateEdit *dueDateEdit;

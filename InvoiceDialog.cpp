@@ -62,10 +62,12 @@ InvoiceDialog::InvoiceDialog(QWidget *parent, pqxx::connection* conn)
     viewButton = new QPushButton("Refresh List", this);
     markPaidButton = new QPushButton("Mark as Paid", this);
     deleteButton = new QPushButton("Delete Invoice", this);
+    overdueButton = new QPushButton("View Overdue", this);
     buttonLayout->addWidget(viewButton);
     buttonLayout->addWidget(markPaidButton);
     buttonLayout->addWidget(deleteButton);
     mainLayout->addLayout(buttonLayout);
+    buttonLayout->addWidget(overdueButton); 
 
     // Connect signals
     connect(addButton, &QPushButton::clicked, this, &InvoiceDialog::handleAddInvoice);
@@ -76,6 +78,8 @@ InvoiceDialog::InvoiceDialog(QWidget *parent, pqxx::connection* conn)
             this, &InvoiceDialog::handleCustomerChanged);
     connect(providerCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &InvoiceDialog::handleProviderChanged);
+    connect(overdueButton, &QPushButton::clicked, this, &InvoiceDialog::handleViewOverdueInvoices);
+
 
     // Load initial data
     loadCustomers();
@@ -154,7 +158,7 @@ void InvoiceDialog::handleAddInvoice()
         pqxx::work txn(*dbConnection);
         txn.exec_params(
             "INSERT INTO invoices (customer_id, provider_id, due_date, amount_due, status) "
-            "VALUES ($1, $2, $3, $4, 'PENDING')",
+            "VALUES ($1, $2, $3, $4, 'UNPAID')",
             customerId,
             providerId,
             dueDate.toStdString(),
@@ -334,3 +338,34 @@ void InvoiceDialog::handleProviderChanged(int index)
 {
     Q_UNUSED(index);
 }
+
+void InvoiceDialog::handleViewOverdueInvoices()
+{
+    try {
+        pqxx::work txn(*dbConnection);
+        pqxx::result res = txn.exec(
+            "SELECT i.invoice_id, c.customer_name, p.provider_name, i.due_date, "
+            "i.amount_due, i.status, c.total_due "
+            "FROM invoices i "
+            "JOIN customers c ON i.customer_id = c.customer_id "
+            "JOIN providers p ON i.provider_id = p.provider_id "
+            "WHERE i.status != 'PAID' AND i.due_date < CURRENT_DATE - INTERVAL '30 days' "
+            "ORDER BY i.due_date ASC"
+        );
+
+        invoiceTable->setRowCount(res.size());
+
+        for (size_t i = 0; i < res.size(); ++i) {
+            invoiceTable->setItem(i, 0, new QTableWidgetItem(QString::number(res[i][0].as<int>())));
+            invoiceTable->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(res[i][1].as<std::string>())));
+            invoiceTable->setItem(i, 2, new QTableWidgetItem(QString::fromStdString(res[i][2].as<std::string>())));
+            invoiceTable->setItem(i, 3, new QTableWidgetItem(QString::fromStdString(res[i][3].as<std::string>())));
+            invoiceTable->setItem(i, 4, new QTableWidgetItem(QString::number(res[i][4].as<double>(), 'f', 2)));
+            invoiceTable->setItem(i, 5, new QTableWidgetItem(QString::fromStdString(res[i][5].as<std::string>())));
+            invoiceTable->setItem(i, 6, new QTableWidgetItem(QString::number(res[i][6].as<double>(), 'f', 2)));
+        }
+    } catch (const std::exception& e) {
+        QMessageBox::critical(this, "Error", QString("Failed to load overdue invoices: %1").arg(e.what()));
+    }
+}
+
