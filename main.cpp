@@ -266,7 +266,7 @@ int main(int argc, char *argv[])
     // basic css for the app
     app.setStyleSheet(R"(
         QDialog {
-            background-color: #1E3D3B;
+            background-color:rgb(56, 114, 110);
             color: white;
         }
         QLabel {

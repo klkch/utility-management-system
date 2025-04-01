@@ -39,6 +39,13 @@ MainWindow::MainWindow(QWidget *parent)
     welcomeLabel->setAlignment(Qt::AlignCenter);
     mainLayout->addWidget(welcomeLabel);
 
+    QLabel *names = new QLabel("By Ali Kalakech, Chris Bolton and Daniel Yun");
+    names->setStyleSheet("font-size: 16px; color: white; padding: 10px;");
+    names->setAlignment(Qt::AlignCenter);
+    mainLayout->addWidget(names);
+
+
+
     // Create button containers
     QWidget *topButtonContainer = new QWidget;
     QHBoxLayout *topButtonLayout = new QHBoxLayout(topButtonContainer);
@@ -53,7 +60,7 @@ MainWindow::MainWindow(QWidget *parent)
     serviceButton = new QPushButton("View Services", this);
 
     QString buttonStyle = "QPushButton {"
-                         "    background-color: #2E5D5B;"
+                         "    background-color:rgb(62, 126, 123);"
                          "    color: white;"
                          "    border: none;"
                          "    padding: 15px 30px;"
@@ -62,10 +69,10 @@ MainWindow::MainWindow(QWidget *parent)
                          "    min-width: 200px;"
                          "}"
                          "QPushButton:hover {"
-                         "    background-color: #3E6D6B;"
+                         "    background-color:rgb(76, 135, 132);"
                          "}"
                          "QPushButton:pressed {"
-                         "    background-color: #1E3D3B;"
+                         "    background-color:rgb(46, 94, 90);"
                          "}";
 
     customerButton->setStyleSheet(buttonStyle);
