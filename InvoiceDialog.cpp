@@ -16,9 +16,14 @@ InvoiceDialog::InvoiceDialog(QWidget *parent, pqxx::connection* conn)
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
 
-    // Create form group
-    QGroupBox *formGroup = new QGroupBox("Add Invoice");
+    QLabel *titleLabel = new QLabel("Add Invoice");
+    titleLabel->setAlignment(Qt::AlignHCenter);
+    mainLayout->addWidget(titleLabel);
+
+    // GroupBox without title
+    QGroupBox *formGroup = new QGroupBox;
     QFormLayout *formLayout = new QFormLayout;
+    formLayout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
 
     customerCombo = new QComboBox(this);
     providerCombo = new QComboBox(this);
@@ -319,3 +324,13 @@ void InvoiceDialog::clearForm()
     dueDateEdit->setDate(QDate::currentDate());
     amountEdit->clear();
 } 
+
+void InvoiceDialog::handleCustomerChanged(int index)
+{
+    Q_UNUSED(index);
+}
+
+void InvoiceDialog::handleProviderChanged(int index)
+{
+    Q_UNUSED(index);
+}

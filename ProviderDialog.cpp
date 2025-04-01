@@ -14,9 +14,14 @@ ProviderDialog::ProviderDialog(QWidget *parent, pqxx::connection* conn)
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
 
-    // Create form group
-    QGroupBox *formGroup = new QGroupBox("Add/Edit Provider");
+    QLabel *titleLabel = new QLabel("Add/Edit Provider");
+    titleLabel->setAlignment(Qt::AlignHCenter);
+    mainLayout->addWidget(titleLabel);
+
+    // GroupBox without title
+    QGroupBox *formGroup = new QGroupBox;
     QFormLayout *formLayout = new QFormLayout;
+    formLayout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
 
     nameEdit = new QLineEdit(this);
     phoneEdit = new QLineEdit(this);

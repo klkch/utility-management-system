@@ -14,9 +14,15 @@ CustomerDialog::CustomerDialog(QWidget *parent, pqxx::connection* conn)
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
 
-    // Create form group
-    QGroupBox *formGroup = new QGroupBox("Add Customer");
+    QLabel *titleLabel = new QLabel("Add Customer");
+    titleLabel->setAlignment(Qt::AlignHCenter);
+    mainLayout->addWidget(titleLabel);
+
+    // GroupBox without title
+    QGroupBox *formGroup = new QGroupBox;
     QFormLayout *formLayout = new QFormLayout;
+    formLayout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
+
 
     nameEdit = new QLineEdit(this);
     addressEdit = new QLineEdit(this);
