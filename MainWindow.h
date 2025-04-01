@@ -4,14 +4,14 @@
 
 #include <QMainWindow>
 #include <QPushButton>
-#include <QVBoxLayout>
-#include <QWidget>
+#include <pqxx/pqxx>
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
     MainWindow(QWidget *parent = nullptr);
+    ~MainWindow();
 
 private slots:
     void handleCustomerClick();
@@ -19,11 +19,15 @@ private slots:
     void handleInvoiceClick();
 
 private:
-    QWidget *centralWidget;
-    QVBoxLayout *layout;
+    void createButtons();
+    void initDatabase();
+    
     QPushButton *customerButton;
     QPushButton *providerButton;
     QPushButton *invoiceButton;
+
+    // Database connection
+    pqxx::connection* dbConnection;
 };
 
 #endif // MAINWINDOW_H

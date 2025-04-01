@@ -259,8 +259,59 @@ void manageInvoices(pqxx::connection& c) {
     }
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     QApplication app(argc, argv);
+    
+    // basic css for the app
+    app.setStyleSheet(R"(
+        QDialog {
+            background-color: #1E3D3B;
+            color: white;
+        }
+        QLabel {
+            color: white;
+        }
+        QPushButton {
+            background-color: #2E5D5B;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+        }
+        QPushButton:hover {
+            background-color: #3E6D6B;
+        }
+        QPushButton:pressed {
+            background-color: #1E3D3B;
+        }
+        QLineEdit, QComboBox, QDateEdit {
+            background-color: #2E5D5B;
+            color: white;
+            border: 1px solid #4E7D7B;
+            padding: 4px;
+            border-radius: 4px;
+        }
+        QTableWidget {
+            background-color: #2E5D5B;
+            color: white;
+            gridline-color: #4E7D7B;
+        }
+        QHeaderView::section {
+            background-color: #1E3D3B;
+            color: white;
+            padding: 4px;
+            border: 1px solid #4E7D7B;
+        }
+        QGroupBox {
+            color: white;
+            border: 1px solid #4E7D7B;
+            margin-top: 1em;
+        }
+        QGroupBox::title {
+            color: white;
+        }
+    )");
 
     MainWindow window;
     window.show();
