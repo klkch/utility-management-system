@@ -20,7 +20,6 @@ InvoiceDialog::InvoiceDialog(QWidget *parent, pqxx::connection* conn)
     titleLabel->setAlignment(Qt::AlignHCenter);
     mainLayout->addWidget(titleLabel);
 
-    // GroupBox without title
     QGroupBox *formGroup = new QGroupBox;
     QFormLayout *formLayout = new QFormLayout;
     formLayout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
@@ -30,12 +29,10 @@ InvoiceDialog::InvoiceDialog(QWidget *parent, pqxx::connection* conn)
     dueDateEdit = new QDateEdit(this);
     amountEdit = new QLineEdit(this);
 
-    // Setup date edit
     dueDateEdit->setCalendarPopup(true);
     dueDateEdit->setDate(QDate::currentDate());
     dueDateEdit->setMinimumDate(QDate::currentDate());
 
-    // Setup amount edit with validator
     QDoubleValidator *validator = new QDoubleValidator(0.00, 999999.99, 2, this);
     validator->setNotation(QDoubleValidator::StandardNotation);
     amountEdit->setValidator(validator);
@@ -52,12 +49,10 @@ InvoiceDialog::InvoiceDialog(QWidget *parent, pqxx::connection* conn)
     formGroup->setLayout(formLayout);
     mainLayout->addWidget(formGroup);
 
-    // Create table
     invoiceTable = new QTableWidget(this);
     setupTable();
     mainLayout->addWidget(invoiceTable);
 
-    // Create button layout
     QHBoxLayout *buttonLayout = new QHBoxLayout;
     viewButton = new QPushButton("Refresh List", this);
     markPaidButton = new QPushButton("Mark as Paid", this);
@@ -67,21 +62,16 @@ InvoiceDialog::InvoiceDialog(QWidget *parent, pqxx::connection* conn)
     buttonLayout->addWidget(markPaidButton);
     buttonLayout->addWidget(deleteButton);
     mainLayout->addLayout(buttonLayout);
-    buttonLayout->addWidget(overdueButton); 
+    buttonLayout->addWidget(overdueButton);
 
-    // Connect signals
     connect(addButton, &QPushButton::clicked, this, &InvoiceDialog::handleAddInvoice);
     connect(viewButton, &QPushButton::clicked, this, &InvoiceDialog::handleViewInvoices);
     connect(markPaidButton, &QPushButton::clicked, this, &InvoiceDialog::handleMarkAsPaid);
     connect(deleteButton, &QPushButton::clicked, this, &InvoiceDialog::handleDeleteInvoice);
-    connect(customerCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, &InvoiceDialog::handleCustomerChanged);
-    connect(providerCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, &InvoiceDialog::handleProviderChanged);
+    connect(customerCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &InvoiceDialog::handleCustomerChanged);
+    connect(providerCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &InvoiceDialog::handleProviderChanged);
     connect(overdueButton, &QPushButton::clicked, this, &InvoiceDialog::handleViewOverdueInvoices);
 
-
-    // Load initial data
     loadCustomers();
     loadProviders();
     handleViewInvoices();
@@ -89,9 +79,9 @@ InvoiceDialog::InvoiceDialog(QWidget *parent, pqxx::connection* conn)
 
 void InvoiceDialog::setupTable()
 {
-    invoiceTable->setColumnCount(7);
+    invoiceTable->setColumnCount(6);
     invoiceTable->setHorizontalHeaderLabels({
-        "ID", "Customer", "Provider", "Due Date", "Amount Due", "Status", "Total Due"
+        "ID", "Customer", "Provider", "Due Date", "Amount Due", "Status"
     });
     invoiceTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     invoiceTable->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -105,11 +95,11 @@ void InvoiceDialog::loadCustomers()
         customerCombo->addItem("Select Customer", QVariant());
 
         pqxx::work txn(*dbConnection);
-        pqxx::result res = txn.exec("SELECT customer_id, customer_name FROM customers ORDER BY customer_name");
+        pqxx::result res = txn.exec("SELECT customer_id, name FROM customers ORDER BY name");
 
         for (const auto& row : res) {
             int id = row["customer_id"].as<int>();
-            QString name = QString::fromStdString(row["customer_name"].as<std::string>());
+            QString name = QString::fromStdString(row["name"].as<std::string>());
             customerCombo->addItem(name, id);
         }
     } catch (const std::exception& e) {
@@ -165,12 +155,7 @@ void InvoiceDialog::handleAddInvoice()
             amount
         );
 
-        // Update customer's total due
-        txn.exec_params(
-            "UPDATE customers SET total_due = total_due + $1 WHERE customer_id = $2",
-            amount,
-            customerId
-        );
+    
 
         txn.commit();
 
@@ -187,13 +172,14 @@ void InvoiceDialog::handleViewInvoices()
     try {
         pqxx::work txn(*dbConnection);
         pqxx::result res = txn.exec(
-            "SELECT i.invoice_id, c.customer_name, p.provider_name, i.due_date, "
-            "i.amount_due, i.status, c.total_due "
+            "SELECT i.invoice_id, c.name, p.provider_name, i.due_date, "
+            "i.amount_due, i.status "
             "FROM invoices i "
             "JOIN customers c ON i.customer_id = c.customer_id "
             "JOIN providers p ON i.provider_id = p.provider_id "
             "ORDER BY i.due_date DESC"
         );
+        
 
         invoiceTable->setRowCount(res.size());
         
@@ -204,7 +190,6 @@ void InvoiceDialog::handleViewInvoices()
             invoiceTable->setItem(i, 3, new QTableWidgetItem(QString::fromStdString(res[i][3].as<std::string>())));
             invoiceTable->setItem(i, 4, new QTableWidgetItem(QString::number(res[i][4].as<double>(), 'f', 2)));
             invoiceTable->setItem(i, 5, new QTableWidgetItem(QString::fromStdString(res[i][5].as<std::string>())));
-            invoiceTable->setItem(i, 6, new QTableWidgetItem(QString::number(res[i][6].as<double>(), 'f', 2)));
         }
     } catch (const std::exception& e) {
         QMessageBox::critical(this, "Error", QString("Failed to load invoices: %1").arg(e.what()));
@@ -251,13 +236,7 @@ void InvoiceDialog::handleMarkAsPaid()
             invoiceId
         );
 
-        // Update customer's total due
-        txn.exec_params(
-            "UPDATE customers SET total_due = total_due - $1 WHERE customer_id = $2",
-            amount,
-            customerId
-        );
-
+        
         txn.commit();
 
         QMessageBox::information(this, "Success", "Invoice marked as paid successfully!");
@@ -300,12 +279,7 @@ void InvoiceDialog::handleDeleteInvoice()
                     int customerId = res[0]["customer_id"].as<int>();
                     double amount = res[0]["amount_due"].as<double>();
 
-                    // Update customer's total due
-                    txn.exec_params(
-                        "UPDATE customers SET total_due = total_due - $1 WHERE customer_id = $2",
-                        amount,
-                        customerId
-                    );
+                    
                 }
             }
 
@@ -344,8 +318,8 @@ void InvoiceDialog::handleViewOverdueInvoices()
     try {
         pqxx::work txn(*dbConnection);
         pqxx::result res = txn.exec(
-            "SELECT i.invoice_id, c.customer_name, p.provider_name, i.due_date, "
-            "i.amount_due, i.status, c.total_due "
+            "SELECT i.invoice_id, c.name, p.provider_name, i.due_date, "
+            "i.amount_due, i.status, 0 as total_due "
             "FROM invoices i "
             "JOIN customers c ON i.customer_id = c.customer_id "
             "JOIN providers p ON i.provider_id = p.provider_id "
@@ -362,7 +336,6 @@ void InvoiceDialog::handleViewOverdueInvoices()
             invoiceTable->setItem(i, 3, new QTableWidgetItem(QString::fromStdString(res[i][3].as<std::string>())));
             invoiceTable->setItem(i, 4, new QTableWidgetItem(QString::number(res[i][4].as<double>(), 'f', 2)));
             invoiceTable->setItem(i, 5, new QTableWidgetItem(QString::fromStdString(res[i][5].as<std::string>())));
-            invoiceTable->setItem(i, 6, new QTableWidgetItem(QString::number(res[i][6].as<double>(), 'f', 2)));
         }
     } catch (const std::exception& e) {
         QMessageBox::critical(this, "Error", QString("Failed to load overdue invoices: %1").arg(e.what()));

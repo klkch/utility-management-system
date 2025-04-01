@@ -17,6 +17,7 @@ private slots:
     void handleCustomerClick();
     void handleProviderClick();
     void handleInvoiceClick();
+    void handleServiceClick();
 
 private:
     void createButtons();
@@ -25,6 +26,9 @@ private:
     QPushButton *customerButton;
     QPushButton *providerButton;
     QPushButton *invoiceButton;
+    QPushButton *serviceButton;
+    
+
 
     // Database connection
     pqxx::connection* dbConnection;

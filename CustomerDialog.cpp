@@ -86,13 +86,13 @@ void CustomerDialog::handleAddCustomer()
     try {
         pqxx::work txn(*dbConnection);
         txn.exec_params(
-            "INSERT INTO customers (customer_name, customer_address, phone_number, customer_email, total_due) "
-            "VALUES ($1, $2, $3, $4, 0.00)",
+            "INSERT INTO customers (name, address, phone_number, email) VALUES ($1, $2, $3, $4)",
             name.toStdString(),
             address.toStdString(),
             phone.toStdString(),
             email.toStdString()
         );
+        
         txn.commit();
 
         QMessageBox::information(this, "Success", "Customer added successfully!");
@@ -108,7 +108,7 @@ void CustomerDialog::handleViewCustomers()
     try {
         pqxx::work txn(*dbConnection);
         pqxx::result res = txn.exec(
-            "SELECT customer_id, customer_name, customer_address, phone_number, customer_email "
+            "SELECT customer_id, name, address, phone_number, email "
             "FROM customers ORDER BY customer_id"
         );
 

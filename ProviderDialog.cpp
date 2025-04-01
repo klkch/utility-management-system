@@ -4,6 +4,7 @@
 #include <QHeaderView>
 #include <QGroupBox>
 #include <QHBoxLayout>
+#include <QDoubleValidator>
 
 ProviderDialog::ProviderDialog(QWidget *parent, pqxx::connection* conn)
     : QDialog(parent), dbConnection(conn), isEditing(false), editingId(-1)
@@ -18,7 +19,6 @@ ProviderDialog::ProviderDialog(QWidget *parent, pqxx::connection* conn)
     titleLabel->setAlignment(Qt::AlignHCenter);
     mainLayout->addWidget(titleLabel);
 
-    // GroupBox without title
     QGroupBox *formGroup = new QGroupBox;
     QFormLayout *formLayout = new QFormLayout;
     formLayout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
@@ -27,8 +27,9 @@ ProviderDialog::ProviderDialog(QWidget *parent, pqxx::connection* conn)
     phoneEdit = new QLineEdit(this);
     emailEdit = new QLineEdit(this);
     serviceTypeCombo = new QComboBox(this);
+    meterRateEdit = new QLineEdit(this);
+    meterRateEdit->setValidator(new QDoubleValidator(0.00, 99999.99, 2, this));
 
-    // Add service types
     serviceTypeCombo->addItem("Natural Gas");
     serviceTypeCombo->addItem("Internet - TV");
     serviceTypeCombo->addItem("Internet - Mobile Phone");
@@ -41,12 +42,12 @@ ProviderDialog::ProviderDialog(QWidget *parent, pqxx::connection* conn)
     formLayout->addRow("Phone:", phoneEdit);
     formLayout->addRow("Email:", emailEdit);
     formLayout->addRow("Service Type:", serviceTypeCombo);
+    formLayout->addRow("Meter Rate:", meterRateEdit);
 
-    // Create button layout for form
     QHBoxLayout *formButtonLayout = new QHBoxLayout;
     addButton = new QPushButton("Add Provider", this);
     updateButton = new QPushButton("Update Provider", this);
-    updateButton->setVisible(false);  // Initially hidden
+    updateButton->setVisible(false);
     formButtonLayout->addWidget(addButton);
     formButtonLayout->addWidget(updateButton);
     formLayout->addRow(formButtonLayout);
@@ -54,12 +55,10 @@ ProviderDialog::ProviderDialog(QWidget *parent, pqxx::connection* conn)
     formGroup->setLayout(formLayout);
     mainLayout->addWidget(formGroup);
 
-    // Create table
     providerTable = new QTableWidget(this);
     setupTable();
     mainLayout->addWidget(providerTable);
 
-    // Create button layout
     QHBoxLayout *buttonLayout = new QHBoxLayout;
     viewButton = new QPushButton("Refresh List", this);
     removeButton = new QPushButton("Remove Selected", this);
@@ -67,21 +66,19 @@ ProviderDialog::ProviderDialog(QWidget *parent, pqxx::connection* conn)
     buttonLayout->addWidget(removeButton);
     mainLayout->addLayout(buttonLayout);
 
-    // Connect signals
     connect(addButton, &QPushButton::clicked, this, &ProviderDialog::handleAddProvider);
     connect(updateButton, &QPushButton::clicked, this, &ProviderDialog::handleEditProvider);
     connect(viewButton, &QPushButton::clicked, this, &ProviderDialog::handleViewProviders);
     connect(removeButton, &QPushButton::clicked, this, &ProviderDialog::handleRemoveProvider);
     connect(providerTable, &QTableWidget::itemSelectionChanged, this, &ProviderDialog::handleSelectionChanged);
 
-    // Initial load
     handleViewProviders();
 }
 
 void ProviderDialog::setupTable()
 {
-    providerTable->setColumnCount(5);
-    providerTable->setHorizontalHeaderLabels({"ID", "Name", "Phone", "Email", "Service Type"});
+    providerTable->setColumnCount(6);
+    providerTable->setHorizontalHeaderLabels({"ID", "Name", "Phone", "Email", "Service Type", "Meter Rate"});
     providerTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     providerTable->setSelectionBehavior(QAbstractItemView::SelectRows);
     providerTable->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -93,22 +90,29 @@ void ProviderDialog::handleAddProvider()
     QString phone = phoneEdit->text().trimmed();
     QString email = emailEdit->text().trimmed();
     QString serviceType = serviceTypeCombo->currentText();
+    QString meterRateText = meterRateEdit->text().trimmed();
 
-    if (name.isEmpty() || phone.isEmpty() || email.isEmpty()) {
+    if (name.isEmpty() || phone.isEmpty() || email.isEmpty() || meterRateText.isEmpty()) {
         QMessageBox::warning(this, "Error", "All fields are required!");
         return;
     }
 
     try {
         pqxx::work txn(*dbConnection);
-        txn.exec_params(
+        pqxx::result r = txn.exec_params(
             "INSERT INTO providers (provider_name, phone_number, provider_email, service_type) "
-            "VALUES ($1, $2, $3, $4)",
-            name.toStdString(),
-            phone.toStdString(),
-            email.toStdString(),
-            serviceType.toStdString()
+            "VALUES ($1, $2, $3, $4) RETURNING provider_id",
+            name.toStdString(), phone.toStdString(), email.toStdString(), serviceType.toStdString()
         );
+
+        int providerId = r[0]["provider_id"].as<int>();
+
+        txn.exec_params(
+            "INSERT INTO services (provider_id, service_type, meter_rate) "
+            "VALUES ($1, $2, $3)",
+            providerId, serviceType.toStdString(), meterRateText.toDouble()
+        );
+
         txn.commit();
 
         QMessageBox::information(this, "Success", "Provider added successfully!");
@@ -124,8 +128,9 @@ void ProviderDialog::handleViewProviders()
     try {
         pqxx::work txn(*dbConnection);
         pqxx::result res = txn.exec(
-            "SELECT provider_id, provider_name, phone_number, provider_email, service_type "
-            "FROM providers ORDER BY provider_id"
+            "SELECT p.provider_id, p.provider_name, p.phone_number, p.provider_email, p.service_type, s.meter_rate "
+            "FROM providers p JOIN services s ON p.provider_id = s.provider_id ORDER BY p.provider_id"
+
         );
 
         providerTable->setRowCount(res.size());
@@ -136,6 +141,7 @@ void ProviderDialog::handleViewProviders()
             providerTable->setItem(i, 2, new QTableWidgetItem(QString::fromStdString(res[i][2].as<std::string>())));
             providerTable->setItem(i, 3, new QTableWidgetItem(QString::fromStdString(res[i][3].as<std::string>())));
             providerTable->setItem(i, 4, new QTableWidgetItem(QString::fromStdString(res[i][4].as<std::string>())));
+            providerTable->setItem(i, 5, new QTableWidgetItem(QString::number(res[i][5].as<double>(), 'f', 2)));
         }
     } catch (const std::exception& e) {
         QMessageBox::critical(this, "Error", QString("Failed to load providers: %1").arg(e.what()));
@@ -231,10 +237,22 @@ void ProviderDialog::populateFormForEdit(int row)
     phoneEdit->setText(providerTable->item(row, 2)->text());
     emailEdit->setText(providerTable->item(row, 3)->text());
     serviceTypeCombo->setCurrentText(providerTable->item(row, 4)->text());
-    
-    isEditing = true;
-    addButton->setVisible(false);
-    updateButton->setVisible(true);
+
+    try {
+        pqxx::work txn(*dbConnection);
+        pqxx::result res = txn.exec_params(
+            "SELECT meter_rate FROM services WHERE provider_id = $1 AND service_type = $2",
+            editingId,
+            serviceTypeCombo->currentText().toStdString()
+        );
+        if (!res.empty()) {
+            meterRateEdit->setText(QString::number(res[0]["meter_rate"].as<double>(), 'f', 2));
+        } else {
+            meterRateEdit->clear();
+        }
+    } catch (const std::exception& e) {
+        QMessageBox::warning(this, "Warning", QString("Could not load meter rate: %1").arg(e.what()));
+    }
 }
 
 void ProviderDialog::clearForm()
@@ -243,8 +261,9 @@ void ProviderDialog::clearForm()
     phoneEdit->clear();
     emailEdit->clear();
     serviceTypeCombo->setCurrentIndex(0);
+    meterRateEdit->clear();
     isEditing = false;
     editingId = -1;
     addButton->setVisible(true);
     updateButton->setVisible(false);
-} 
+}

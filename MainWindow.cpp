@@ -2,6 +2,7 @@
 #include "CustomerDialog.h"
 #include "ProviderDialog.h"
 #include "InvoiceDialog.h"
+#include "ServiceDialog.h"
 #include <QWidget>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -38,14 +39,18 @@ MainWindow::MainWindow(QWidget *parent)
     welcomeLabel->setAlignment(Qt::AlignCenter);
     mainLayout->addWidget(welcomeLabel);
 
-    // Create buttons container
-    QWidget *buttonContainer = new QWidget;
-    QHBoxLayout *buttonLayout = new QHBoxLayout(buttonContainer);
+    // Create button containers
+    QWidget *topButtonContainer = new QWidget;
+    QHBoxLayout *topButtonLayout = new QHBoxLayout(topButtonContainer);
+
+    QWidget *bottomButtonContainer = new QWidget;
+    QHBoxLayout *bottomButtonLayout = new QHBoxLayout(bottomButtonContainer);
 
     // Create and style buttons
     customerButton = new QPushButton("Manage Customers", this);
     providerButton = new QPushButton("Manage Providers", this);
     invoiceButton = new QPushButton("Manage Invoices", this);
+    serviceButton = new QPushButton("View Services", this);
 
     QString buttonStyle = "QPushButton {"
                          "    background-color: #2E5D5B;"
@@ -66,6 +71,7 @@ MainWindow::MainWindow(QWidget *parent)
     customerButton->setStyleSheet(buttonStyle);
     providerButton->setStyleSheet(buttonStyle);
     invoiceButton->setStyleSheet(buttonStyle);
+    serviceButton->setStyleSheet(buttonStyle);
 
     // Icon and button layout setup
     auto makeIconButtonGroup = [](const QString &iconPath, QPushButton *button) -> QWidget* {
@@ -77,28 +83,37 @@ MainWindow::MainWindow(QWidget *parent)
         vLayout->addWidget(iconLabel);
         vLayout->addWidget(button);
         vLayout->setAlignment(Qt::AlignHCenter);
+        vLayout->setContentsMargins(0, 10, 0, 0);
 
         QWidget *group = new QWidget;
         group->setLayout(vLayout);
         return group;
     };
 
+    // Create icon-button groups
     QWidget *customerWidget = makeIconButtonGroup("icons/customer.png", customerButton);
     QWidget *providerWidget = makeIconButtonGroup("icons/provider.png", providerButton);
     QWidget *invoiceWidget = makeIconButtonGroup("icons/invoice.png", invoiceButton);
+    QWidget *serviceWidget = makeIconButtonGroup("icons/service.png", serviceButton); 
 
-    // Add widgets to layout
-    buttonLayout->addStretch();
-    buttonLayout->addWidget(customerWidget);
-    buttonLayout->addSpacing(20);
-    buttonLayout->addWidget(providerWidget);
-    buttonLayout->addSpacing(20);
-    buttonLayout->addWidget(invoiceWidget);
-    buttonLayout->addStretch();
+    // Add widgets to layouts
+    topButtonLayout->addStretch();
+    topButtonLayout->addWidget(customerWidget);
+    topButtonLayout->addSpacing(20);
+    topButtonLayout->addWidget(providerWidget);
+    topButtonLayout->addSpacing(20);
+    topButtonLayout->addWidget(invoiceWidget);
+    topButtonLayout->addStretch();
 
-    // Add button container to main layout
+    bottomButtonLayout->addStretch();
+    bottomButtonLayout->addWidget(serviceWidget);
+    bottomButtonLayout->addStretch();
+
+    // Add button containers to main layout
     mainLayout->addSpacing(50);
-    mainLayout->addWidget(buttonContainer);
+    mainLayout->addWidget(topButtonContainer);
+    mainLayout->addSpacing(30);
+    mainLayout->addWidget(bottomButtonContainer);
     mainLayout->addStretch();
 
     setCentralWidget(centralWidget);
@@ -107,6 +122,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(customerButton, &QPushButton::clicked, this, &MainWindow::handleCustomerClick);
     connect(providerButton, &QPushButton::clicked, this, &MainWindow::handleProviderClick);
     connect(invoiceButton, &QPushButton::clicked, this, &MainWindow::handleInvoiceClick);
+    connect(serviceButton, &QPushButton::clicked, this, &MainWindow::handleServiceClick); 
 }
 
 MainWindow::~MainWindow()
@@ -165,3 +181,15 @@ void MainWindow::handleInvoiceClick()
     InvoiceDialog dialog(this, dbConnection);
     dialog.exec();
 }
+
+void MainWindow::handleServiceClick()
+{
+    if (!dbConnection) {
+        QMessageBox::critical(this, "Error", "Database connection not available!");
+        return;
+    }
+
+    ServiceDialog dialog(this, dbConnection);
+    dialog.exec();
+}
+

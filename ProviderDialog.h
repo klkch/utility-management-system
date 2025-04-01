@@ -39,6 +39,8 @@ private:
     QPushButton *viewButton;
     QPushButton *removeButton;
     QTableWidget *providerTable;
+    QLineEdit *meterRateEdit;
+
     pqxx::connection* dbConnection;
     bool isEditing;
     int editingId;
